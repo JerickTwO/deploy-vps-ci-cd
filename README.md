@@ -41,7 +41,7 @@ sudo bash /tmp/setup-vps.sh
 ### 3. Configurar GitHub Secrets
 
 Ve a tu repositorio > Settings > Secrets and variables > Actions y agrega:
-
+ 
 ```
 VPS_HOST=1.2.3.4                    # IP de tu VPS
 VPS_USERNAME=deploy                  # Usuario para SSH

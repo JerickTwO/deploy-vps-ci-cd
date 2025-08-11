@@ -32,7 +32,7 @@ services:
       context: ./frontend
       args:
         # provide env variables to be used when building our frontend
-        - VITE_APP_BACKEND_URL=https://147.93.43.93:5001/api
+        - VITE_APP_BACKEND_URL=http://147.93.43.93:5001/api
     restart: always
     ports:
       - "5002:5002"

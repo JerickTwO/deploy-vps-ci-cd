@@ -28,11 +28,11 @@ services:
 
   frontend:
     image: fabrice45/school-frontend
-    # build: 
-    #   context: ./frontend
-    #   args:
-    #     # provide env variables to be used when building our frontend
-    #     - VITE_APP_BACKEND_URL=https://backend.cyizere.net/api
+    build: 
+      context: ./frontend
+      args:
+        # provide env variables to be used when building our frontend
+        - VITE_APP_BACKEND_URL=https://147.93.43.93:5001/api
     restart: always
     ports:
       - "5002:5002"

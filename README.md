@@ -1,187 +1,106 @@
-# Hello World Spring Boot - CI/CD con Docker
+# Watch the full video on YouTube
+<a href="https://www.youtube.com/watch?v=RgZFoC0QHbg" target="_blank">
+  <img src="https://img.youtube.com/vi/RgZFoC0QHbg/0.jpg" alt="Watch the video" style="width:100%">
+</a>
 
-Este proyecto implementa una aplicación Spring Boot con un pipeline completo de CI/CD usando GitHub Actions, Docker y despliegue en VPS.
+## Getting started
+To get started, create a .env file and provide the following environment variables
+```
+MYSQL_ROOT_PASSWORD=
+MYSQL_DATABASE=
+MYSQL_USER=
+MYSQL_PASSWORD=
+DB_URL=jdbc:mysql://yourMysqlServiceName:3306/yourDbName
+```
+Then run the app by using: ``docker compose up``
 
-## 🚀 Características
+## Video resources
+Below you can find all the basic commands and tools needed to deploy your full-stack application to a VPS
 
-- **Spring Boot 3.5.4** con Java 21
-- **Docker** multi-stage build optimizado
-- **CI/CD** con GitHub Actions
-- **Nginx** como reverse proxy
-- **Health checks** y monitoreo
-- **Despliegue automático** en VPS
+I assume you are using Ubuntu or Debian operating system on your VPS.
 
-## 📋 Endpoints Disponibles
-
-- `GET /` - Hola mundo principal
-- `GET /hola` - Saludo de bienvenida
-- `GET /saludo` - Saludo desde el controlador
-- `GET /actuator/health` - Health check
-
-## 🛠️ Configuración Inicial
-
-### 1. Preparar el VPS
-
-Ejecuta el script de configuración en tu VPS:
-
-```bash
-# Copiar script al VPS
-scp scripts/setup-vps.sh usuario@tu-vps:/tmp/
-ssh usuario@tu-vps
-
-# Ejecutar como root
-sudo bash /tmp/setup-vps.sh
+1. Installing docker on a VPS
+```
+sudo apt-get update
+curl -sS https://get.docker.com/ | sh
 ```
 
-### 2. Configurar Docker Hub
+For more information use the official docker website [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
 
-1. Crea una cuenta en [Docker Hub](https://hub.docker.com/)
-2. Genera un Access Token en Settings > Security
+2. Installing nginx on a VPS
 
-### 3. Configurar GitHub Secrets
-
-Ve a tu repositorio > Settings > Secrets and variables > Actions y agrega:
- 
 ```
-VPS_HOST=1.2.3.4                    # IP de tu VPS
-VPS_USERNAME=deploy                  # Usuario para SSH
-VPS_SSH_KEY=-----BEGIN PRIVATE...   # Tu clave SSH privada
-DOCKERHUB_USERNAME=tu_usuario        # Tu usuario de Docker Hub
-DOCKERHUB_TOKEN=dckr_pat_...         # Tu token de Docker Hub
+sudo apt update
+sudo apt install nginx
+sudo ufw allow 'Nginx Full'
 ```
 
-### 4. Configurar el VPS
+### NGINX configuration template files
+At this step, you must be able to access your application by using your VPS's IP address.
+To be able to access your application by using a domain name, you need to make some NGINX configurations
 
-```bash
-# Conectarse al VPS
-ssh deploy@tu-vps
+1. NGINX configuration template file before installing an SSL certificate (when you want to access your application by using http://yourdomainname.com) 
+```
+server {
+    listen 80;
 
-# Ir al directorio de la aplicación
-cd /opt/hello-world
+    server_name yourdomainname.com;
 
-# Editar variables de entorno
-nano .env
+    location / {
+        proxy_pass http://127.0.0.1:yourApplicationPORT;
+    }
+
+    location ~ /.well-known/acme-challenge/ {
+        root /var/www/certbot; # Ensure Certbot can validate SSL challenges
+    }
+}
+```
+NB: Replace both ``yourdomainname.com`` and ``yourApplicationPORT`` with your actual information
+
+
+
+2. NGINX configuration template file after installing an SSL certificate
+
+After installing an SSL certificate, you need to update the NGINX configuration file for your app with the following template:
+
+```
+server {
+    listen 80;
+
+    server_name yourdomainname.com;
+
+    location ~ /.well-known/acme-challenge/ {
+        root /var/www/certbot; # Ensure Certbot can validate SSL challenges
+    }
+
+    # force https
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name yourdomainname.com www.yourdomainname.com;
+
+    ssl_certificate /etc/letsencrypt/live/yourdomainname.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomainname.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:yourApplicationPORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
 ```
 
-Contenido del `.env`:
-```bash
-DOCKERHUB_USERNAME=tu_usuario_dockerhub
-SPRING_PROFILES_ACTIVE=production
-```
+NB: Replace both ``yourdomainname.com`` and ``yourApplicationPORT`` with your actual information
 
-### 5. Copiar archivos de configuración
+# Congratulations 🍻
 
-```bash
-# Copiar docker-compose.yml y nginx config al VPS
-scp docker-compose.yml deploy@tu-vps:/opt/hello-world/
-scp -r nginx/ deploy@tu-vps:/opt/hello-world/
-```
+By following and implementing all the steps carefully, you should now be able to deploy your application on a VPS 🚀.
+If you face any issues, just let me know in the comment section.
 
-## 🔄 Pipeline CI/CD
-
-El pipeline se ejecuta automáticamente cuando:
-- Hay push a `main` o `develop`
-- Se crea un Pull Request a `main`
-
-### Fases del Pipeline:
-
-1. **Test**: Ejecuta tests unitarios
-2. **Build**: Construye y publica imagen Docker
-3. **Deploy**: Despliega en VPS usando SSH
-
-## 🐳 Comandos Docker Locales
-
-```bash
-# Construir imagen
-docker build -t hello-world-app .
-
-# Ejecutar localmente
-docker run -p 8080:8080 hello-world-app
-
-# Con docker-compose
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f
-
-# Parar servicios
-docker-compose down
-```
-
-## 🔧 Despliegue Manual
-
-Si necesitas desplegar manualmente:
-
-```bash
-# En el VPS
-cd /opt/hello-world
-bash scripts/deploy.sh
-```
-
-## 📊 Monitoreo y Logs
-
-```bash
-# Ver estado de contenedores
-docker ps
-
-# Ver logs de la aplicación
-docker logs hello-world-container -f
-
-# Ver métricas
-curl http://localhost:8080/actuator/health
-
-# Ver logs de Nginx
-docker logs nginx-proxy -f
-```
-
-## 🔒 Configuración de SSL (Opcional)
-
-Para configurar HTTPS:
-
-1. Obtén certificados SSL (Let's Encrypt recomendado)
-2. Coloca los certificados en `nginx/ssl/`
-3. Descomenta la configuración SSL en `nginx/nginx.conf`
-4. Actualiza el `docker-compose.yml` para montar los certificados
-
-```bash
-# Obtener certificados con Certbot
-sudo apt install certbot
-sudo certbot certonly --standalone -d tu-dominio.com
-```
-
-## 🚨 Troubleshooting
-
-### La aplicación no inicia
-```bash
-# Ver logs detallados
-docker logs hello-world-container
-
-# Verificar configuración
-docker inspect hello-world-container
-```
-
-### Problemas de conexión
-```bash
-# Verificar puertos
-netstat -tlnp | grep 8080
-
-# Verificar firewall
-sudo ufw status
-```
-
-### Pipeline falla
-- Verifica que todos los secrets estén configurados
-- Revisa los logs en GitHub Actions
-- Verifica conectividad SSH al VPS
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit tus cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crea un Pull Request
-
-## 📝 Licencia
-
-Este proyecto está bajo la Licencia MIT.
+Don't forget to hit that like button as it helps this little channel grow🤗
+Thank you!

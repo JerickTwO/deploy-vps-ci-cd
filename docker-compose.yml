@@ -1,45 +1,64 @@
-version: '3.8'
-
 services:
-  hello-world-app:
-    image: ${DOCKERHUB_USERNAME}/hello-world-app:latest
-    container_name: hello-world-container
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
+  mysql:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
     environment:
-      - SPRING_PROFILES_ACTIVE=production
-      - SERVER_PORT=8080
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  # Nginx reverse proxy (opcional)
-  nginx:
-    image: nginx:alpine
-    container_name: nginx-proxy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER} 
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports: 
+      - "3305:3306"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-    depends_on:
-      - hello-world-app
-    networks:
-      - app-network
+      - mysql_data:/var/lib/mysql
 
-networks:
-  app-network:
-    driver: bridge
+  backend:
+    # build: ./backend 
+    image: fabrice45/school-backend
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      - DB_URL=${DB_URL}
+      - DB_USERNAME=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - mysql
+
+  frontend:
+    image: fabrice45/school-frontend
+    # build: 
+    #   context: ./frontend
+    #   args:
+    #     # provide env variables to be used when building our frontend
+    #     - VITE_APP_BACKEND_URL=https://backend.cyizere.net/api
+    restart: always
+    ports:
+      - "5002:5002"
+    depends_on:
+      - backend
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/www/certbot:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot --keep-until-expiring --email ${CERTBOT_EMAIL} -d ${CERTBOT_DOMAIN1} -d ${CERTBOT_DOMAIN2} --agree-tos
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - DOCKER_HUB_USERNAME=${DOCKER_HUB_USERNAME}
+      - DOCKER_HUB_PASSWORD=${DOCKER_HUB_ACCESS_TOKEN}
+    command: --interval 300  # Checks for updates every 5 minutes
+
+volumes:
+  mysql_data:
+  certbot-ssl:
+  certbot-challenge:

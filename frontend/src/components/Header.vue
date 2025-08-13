@@ -4,7 +4,7 @@
   >
     <RouterLink to="/">
       <div class="text-4xl font-semibold">
-        <span>Schooll</span>
+        <span>Test</span>
         <span class="text-yellow-500 italic">App</span>
       </div>
     </RouterLink>

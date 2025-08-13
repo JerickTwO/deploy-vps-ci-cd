@@ -27,9 +27,9 @@ services:
       - mysql
 
   frontend:
-    image: jerick21/deploy-vps-ci-cd
+    # image: jerick21/deploy-vps-ci-cd
     build: 
-      context: ./frontend
+      image: jerick21/deploy-vps-ci-cd
       args:
         # provide env variables to be used when building our frontend
         - VITE_APP_BACKEND_URL=https://backend.jerickdev.com/api

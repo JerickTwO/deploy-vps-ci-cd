@@ -14,8 +14,7 @@ services:
       - mysql_data:/var/lib/mysql
 
   backend:
-    # build: ./backend 
-    image: jerick21/deploy-vps-ci-cd
+    image: jerick21/school-backend
     restart: always
     ports:
       - "5001:5001"
@@ -27,9 +26,8 @@ services:
       - mysql
 
   frontend:
-    # image: jerick21/deploy-vps-ci-cd
     build: 
-      image: jerick21/deploy-vps-ci-cd
+      image: jerick21/school-frontend
       args:
         # provide env variables to be used when building our frontend
         - VITE_APP_BACKEND_URL=https://backend.jerickdev.com/api

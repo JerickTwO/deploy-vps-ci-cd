@@ -27,7 +27,7 @@ jobs:
           push: true
           tags: fabrice45/school-frontend:latest
           build-args: |
-            VITE_APP_BACKEND_URL=https://backend.cyizere.net/api
+            VITE_APP_BACKEND_URL=https://backend.jerickdev.com/api
 
       - name: Build and push Docker image for backend project
         uses: docker/build-push-action@v5

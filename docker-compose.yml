@@ -15,7 +15,7 @@ services:
 
   backend:
     # build: ./backend 
-    image: fabrice45/school-backend
+    image: jerick21/deploy-vps-ci-cd
     restart: always
     ports:
       - "5001:5001"
@@ -27,7 +27,7 @@ services:
       - mysql
 
   frontend:
-    image: fabrice45/school-frontend
+    image: jerick21/deploy-vps-ci-cd
     build: 
       context: ./frontend
       args:

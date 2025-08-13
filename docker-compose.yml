@@ -26,11 +26,7 @@ services:
       - mysql
 
   frontend:
-    build: 
-      image: jerick21/school-frontend
-      args:
-        # provide env variables to be used when building our frontend
-        - VITE_APP_BACKEND_URL=https://backend.jerickdev.com/api
+    image: jerick21/school-frontend
     restart: always
     ports:
       - "5002:5002"
